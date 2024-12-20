@@ -1,0 +1,47 @@
+<div class="mx-2">
+
+    {% set temp = data_live.get(room_id, {}).get('temp', 'NaN') %}
+    {% set humidity = data_live.get(room_id, {}).get('hum', 0) %}
+    {% set datetime_status = data_live.get(room_id, {}).get('datetime', '') %}
+
+    <ul class="grid grid-cols-4 gap-2 flex-row items-center justify-center sm:flex-row">
+        <li class="w-full text-center bg-gray-300 dark:bg-gray-800 py-4 rounded-lg sm:w-auto">
+            <p class="mt-3 text-grey-800 dark:text-gray-400 text-xs lg:text-md">Room</p>
+            <h4 class="dark:text-white font-semibold text-sm lg:text-2xl">{{ room_id }}</h4>
+        </li>
+        <li class="w-full text-center bg-gray-300 dark:bg-gray-800 py-4 rounded-lg sm:w-auto">
+            <p class="mt-3 text-grey-800 dark:text-gray-400 text-xs lg:text-md">Temp °C</p>
+            <h4 class="font-semibold text-sm lg:text-2xl
+                    {% if temp < 16 %}text-red-900  dark:text-red-400
+                    {% elif temp < 18 %}text-yellow-700 dark:text-orange-200
+                    {% else %} text-green-900 dark:text-green-300
+                    {% endif %}">
+                {{ temp }}
+            </h4>
+        </li>
+        <li class="w-full text-center bg-gray-300 dark:bg-gray-800 py-4 rounded-lg sm:w-auto">
+            <p class="mt-3 text-grey-800 dark:text-gray-400 text-xs lg:text-md">Hum %</p>
+            <h4 class="font-semibold text-sm lg:text-2xl
+                    {% if temp < 16 %}text-red-900  dark:text-red-400
+                    {% elif temp < 18 %}text-yellow-700 dark:text-orange-200
+                    {% else %} text-green-900 dark:text-green-300
+                    {% endif %}">
+                {{ humidity }}
+            </h4>
+        </li>
+        <li class="w-full text-center bg-gray-300 dark:bg-gray-800 py-4 rounded-lg sm:w-auto">
+            <p class="mt-3 text-grey-800 dark:text-gray-400 text-xs lg:text-md">Status</p>
+            <h4 class="font-semibold text-sm lg:text-2xl
+                    {% if datetime_status == 'live' %}dark:text-green-300 text-green-900
+                    {% else %} dark:text-gray-300
+                    {% endif %}">
+                {{ datetime_status }}
+            </h4>
+        </li>
+    </ul>
+</div>
+
+<!-- Chart -->
+<div class="hidden lg:flex">
+    <canvas id="chart-{{ room_id }}"></canvas>
+</div>

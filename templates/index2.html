@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Garmin House T&H</title>
+    <link rel="stylesheet" href="{{url_for('static',filename='dist/css/output.css')}}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/moment@2.27.0"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-moment@0.1.1"></script>
+    <script src="{{ url_for('static', filename='src/index.js') }}" defer></script>
+    <script>
+        // On page load or when changing themes, best to add inline in `head` to avoid FOUC
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+</head>
+<body class="bg-white dark:bg-gray-900 m-auto max-w-screen-xl ">
+
+<!--    HEADER-->
+    <div class="relative mt-2 mb-8">
+        {% include 'header.html' %}
+    </div>
+<!--    CONTENT -->
+    <div class="grid lg:grid-cols-2 gap-8">
+        {% for room_id in ['MSG', 'salon', 'pierre', 'coco', 'gui', 'sim'] %}
+        <div class="">
+            {% include 'stats.html' %}
+        </div>
+        {% endfor %}
+    </div>
+</body>
+</body>
+</html>

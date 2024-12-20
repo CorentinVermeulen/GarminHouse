@@ -18,10 +18,10 @@
     }
 </script>
 </head>
-<body class="bg-white dark:bg-black">
+<body class="bg-white dark:bg-slate-800">
 <div class="m-auto max-w-screen-xl ">
 
-    <h1 class="relative mt-2 mb-4 text-center text-3xl font-extrabold leading-none tracking-tight dark:text-white md:text-4xl lg:text-5xl border border-black dark:border-white p-2 rounded">
+    <div class="relative mt-2 mb-4 text-center text-3xl font-extrabold leading-none tracking-tight dark:text-white md:text-4xl lg:text-5xl border border-black dark:border-white p-2 rounded">
         <div class="absolute top-0 right-0 pr-4">
         <button id="theme-toggle" type="button"
                 class="text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 focus:outline-none focus:ring-4 focus:ring-gray-200 dark:focus:ring-gray-700 rounded-lg text-sm p-2.5">
@@ -37,44 +37,54 @@
         </button>
     </div>
         Garmin House
-    </h1>
+    </div>
 
-    {% for room_id in ['pierre', 'coco', 'gui'] %}
-    <div class="mb-16">
-        <div class="text-start mb-2 text-2xl font-extrabold leading-none tracking-tight dark:text-slate-300  md:text-3xl lg:text-4xl ">
-            <span class=" p-3">
-                {{room_id}}
-            </span>
-            <span class="rounded text-s font-medium me-2 px-2.5 py-0.5 rounded-full
-                        {% if data_live.get(room_id, {'temp':'NaN'})['temp'] < 16 %}dark:bg-red-900 dark:text-red-300 text-red-900 bg-red-300
-                        {% elif  data_live.get(room_id, {'temp':'NaN'})['temp'] < 18 %}dark:bg-yellow-700 dark:text-orange-200 text-yellow-700 bg-orange-200
-                        {% else %} dark:bg-green-900 dark:text-green-300 text-green-900 bg-green-300
-                        {% endif %}">
-                            {{data_live.get(room_id, {'temp':'NaN'})['temp']}}°C
-                        </span>
-            <span class="rounded text-s font-medium me-2 px-2.5 py-0.5 rounded-full
-                        {% if data_live.get(room_id, {'hum':0})['hum'] > 80 %}dark:bg-red-900 dark:text-red-300 text-red-900 bg-red-300
-                        {% elif  data_live.get(room_id, {'hum':0})['hum'] > 70 %}dark:bg-yellow-700 dark:text-orange-200 text-yellow-700 bg-orange-200
-                        {% else %} dark:bg-green-900 dark:text-green-300 text-green-900 bg-green-300
-                        {% endif %}">
-                            {{data_live.get(room_id)['hum']}} %
-                        </span>
-            <span class="rounded text-s font-medium mx-2 px-2.5 py-0.5
-                        {% if data_live.get(room_id)['datetime'] == 'live' %}dark:bg-green-900 dark:text-green-300 text-green-900 bg-green-300
-                        {% else %} bg-grey-900 text-grey-300
-                        {% endif %}">
-                            {{data_live.get(room_id)['datetime']}}
-                        </span>
+    <div class=" grid lg:grid-cols-2 gap-8">
+        {% for room_id in ['salon', 'pierre', 'coco', 'gui', 'sim'] %}
+        <div class="">
+            <!-- Room Header: Name, Temperature, Humidity, Status -->
+            <div class="grid grid-cols-4 mb-2 text-2xl dark:text-slate-300 md:text-3xl lg:text-4xl px-4">
 
-        </div>
-        <div class="container flex">
-            <div class="container">
-                <canvas id={{"chart-"+room_id}}></canvas>
+                <!-- Room Name -->
+                <div class="text-center me-2 px-2.5 py-0.5">{{ room_id }}</div>
+
+                <!-- Temperature -->
+                {% set temp = data_live.get(room_id, {}).get('temp', 'NaN') %}
+                <div class=" text-center rounded font-medium me-2 px-2.5 py-0.5
+                {% if temp < 16 %}bg-red-300 text-red-900 dark:bg-red-900 dark:text-red-300
+                {% elif temp < 18 %}bg-orange-200 text-yellow-700 dark:bg-yellow-700 dark:text-orange-200
+                {% else %}bg-green-300 text-green-900 dark:bg-green-900 dark:text-green-300
+                {% endif %}">
+                    {{ temp }}<span class="sm:text-xs md:text-sm lg:text-md">°C</span>
+                </div>
+
+                <!-- Humidity -->
+                {% set humidity = data_live.get(room_id, {}).get('hum', 0) %}
+                <div class="text-center rounded font-medium me-2 px-2.5 py-0.5
+                {% if humidity > 80 %}bg-red-300 text-red-900 dark:bg-red-900 dark:text-red-300
+                {% elif humidity > 70 %}bg-orange-200 text-yellow-700 dark:bg-yellow-700 dark:text-orange-200
+                {% else %}bg-green-300 text-green-900 dark:bg-green-900 dark:text-green-300
+                {% endif %}">
+                    {{ humidity }}<span class="sm:text-xs md:text-sm lg:text-md">%</span>
+                </div>
+
+                <!-- Live Status -->
+                {% set datetime_status = data_live.get(room_id, {}).get('datetime', '') %}
+                <div class="text-center rounded text-s font-medium me-2 px-2.5 py-0.5
+                {% if datetime_status == 'live' %}bg-green-300 text-green-900 dark:bg-green-900 dark:text-green-300
+                {% else %}bg-gray-300 text-gray-900 dark:bg-gray-900 dark:text-gray-300
+                {% endif %}">
+                    {{ datetime_status }}
+                </div>
+            </div>
+
+            <!-- Chart -->
+            <div class="hidden lg:flex col-span-8">
+                <canvas id="chart-{{ room_id }}"></canvas>
             </div>
         </div>
-
+        {% endfor %}
     </div>
-    {% endfor %}
 </div>
 <script>
 
@@ -181,6 +191,9 @@
                                     maxRotation: 0,         // Prevent tick labels from rotating
                                     minRotation: 0,
                                 },
+                                grid: {
+                                    display: false,  // Remove grid
+                                },
                             },
 
                             // Left axis for Temperature
@@ -251,7 +264,7 @@
 
     }
 
-    const rooms = ["pierre", "coco", "gui"];
+    const rooms = ["salon", "pierre", "coco", "gui", "sim"];
     window.onload = function () {
         for (deviceId of rooms) {
             fetchChartData(deviceId);

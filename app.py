@@ -11,9 +11,11 @@ arduino_ips = {
     'pierre': '192.168.129.38',
     'coco': '192.168.129.39',
     'gui': '192.168.129.40',
+    'sim': '192.168.129.41',
+    'salon': '192.168.129.42',
 }
 
-DATABASE = 'database.db'
+DATABASE = 'newDB.db'
 
 
 def fetch_device_data(device, ip):
@@ -38,6 +40,7 @@ def init_db():
                 heat_index REAL
             )
         """)
+    print("check done %s" % DATABASE)
 
 def store_data(device, data):
     conn = sqlite3.connect(DATABASE)
@@ -88,7 +91,7 @@ def get_data_24h(device):
     twenty_four_hours_ago_str = twenty_four_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
 
     # Connect to the SQLite database
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     # If a device name is provided, filter the query by that device
@@ -138,7 +141,7 @@ def get_data_7j(device):
     twenty_four_hours_ago_str = twenty_four_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
 
     # Connect to the SQLite database
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     # If a device name is provided, filter the query by that device
@@ -186,7 +189,7 @@ def get_data_12h_charts(device=None):
     twelve_hours_ago_str = twelve_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
 
     # Connect to the SQLite database
-    conn = sqlite3.connect('database.db')
+    conn = sqlite3.connect(DATABASE)
     cursor = conn.cursor()
 
     # If a device name is provided, filter the query by that device
@@ -268,7 +271,12 @@ def latest_12h_data():
     # Return the data as JSON
     return jsonify(data)
 
+@app.route('/init')
+def init():
+    init_db()
+    return jsonify({"ok": True})
+
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=7030)
+    app.run(host='0.0.0.0', port=7030, debug=True)

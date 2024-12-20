@@ -13,6 +13,7 @@ arduino_ips = {
     'gui': '192.168.129.40',
     'sim': '192.168.129.41',
     'salon': '192.168.129.42',
+    'MSG': False,
 }
 
 DATABASE = 'newDB.db'
@@ -83,107 +84,9 @@ def get_latest_data():
     conn.close()
     return latest_data
 
-def get_data_24h(device):
-    # Get the current time and calculate 24 hours ago
-    twenty_four_hours_ago = datetime.now() - timedelta(hours=24)
-
-    # Convert the datetime to a string for SQL query
-    twenty_four_hours_ago_str = twenty_four_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
-
-    # Connect to the SQLite database
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # If a device name is provided, filter the query by that device
-    cursor.execute("""
-        SELECT 
-            AVG(temp) as mean_temp,
-            AVG(hum) as mean_hum,
-            MIN(temp) as min_temp,
-            MAX(temp) as max_temp,
-            MIN(hum) as min_hum,
-            MAX(hum) as max_hum
-        FROM sensor_data
-        WHERE datetime >= ? AND device = ?
-        ORDER BY datetime ASC
-    """, (twenty_four_hours_ago_str, device))
-
-    # Fetch the result
-    row = cursor.fetchone()
-    conn.close()
-
-    # If there's no data for the given period
-    if not row or row[0] is None:
-        return {
-            'mean_temp': -99,
-            'mean_hum': -99,
-            'min_temp': -99,
-            'max_temp': -99,
-            'min_hum': -99,
-            'max_hum': -99,
-        }
-
-    # Return data in a structured dictionary format
-    return {
-        'mean_temp': round(row[0], 2),  # Average temperature
-        'mean_hum': round(row[1], 2),  # Average humidity
-        'min_temp': round(row[2], 2),  # Minimum temperature
-        'max_temp': round(row[3], 2),  # Maximum temperature
-        'min_hum': round(row[4], 2),  # Minimum humidity
-        'max_hum': round(row[5], 2)  # Maximum humidity
-    }
-
-def get_data_7j(device):
-    # Get the current time and calculate 24 hours ago
-    twenty_four_hours_ago = datetime.now() - timedelta(hours=24 * 7)
-
-    # Convert the datetime to a string for SQL query
-    twenty_four_hours_ago_str = twenty_four_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
-
-    # Connect to the SQLite database
-    conn = sqlite3.connect(DATABASE)
-    cursor = conn.cursor()
-
-    # If a device name is provided, filter the query by that device
-    cursor.execute("""
-        SELECT 
-            AVG(temp) as mean_temp,
-            AVG(hum) as mean_hum,
-            MIN(temp) as min_temp,
-            MAX(temp) as max_temp,
-            MIN(hum) as min_hum,
-            MAX(hum) as max_hum
-        FROM sensor_data
-        WHERE datetime >= ? AND device = ?
-        ORDER BY datetime ASC
-    """, (twenty_four_hours_ago_str, device))
-
-    # Fetch the result
-    row = cursor.fetchone()
-    conn.close()
-    # If there's no data for the given period
-    if not len(row):
-        return {
-            'mean_temp': -99,
-            'mean_hum': -99,
-            'min_temp': -99,
-            'max_temp': -99,
-            'min_hum': -99,
-            'max_hum': -99,
-        }
-    # Return data in a structured dictionary format
-    return {
-        'mean_temp': round(row[0], 2),  # Average temperature
-        'mean_hum': round(row[1], 2),  # Average humidity
-        'min_temp': round(row[2], 2),  # Minimum temperature
-        'max_temp': round(row[3], 2),  # Maximum temperature
-        'min_hum': round(row[4], 2),  # Minimum humidity
-        'max_hum': round(row[5], 2)  # Maximum humidity
-    }
-
-def get_data_12h_charts(device=None):
+def get_data_12h_charts(device=None, time=12):
     # Get the current time and calculate 12 hours ago
-    twelve_hours_ago = datetime.now() - timedelta(hours=12)
+    twelve_hours_ago = datetime.now() - timedelta(hours=time)
 
     # Convert the datetime to a string to use in the SQL query
     twelve_hours_ago_str = twelve_hours_ago.strftime('%d/%m/%Y %H:%M:%S')
@@ -232,28 +135,51 @@ def get_data_12h_charts(device=None):
     }
 
 def fetch_and_store_data_periodically():
+    i = 0
     while True:
         for name, ip in arduino_ips.items():
-            data = fetch_device_data(name, ip)
-            if data:
-                store_data(name, data)
-        time.sleep(30)  # Wait 10 seconds before fetching again
+            if ip:
+                data = fetch_device_data(name, ip)
+                if data:
+                    store_data(name, data)
+        i = (i+1)%3
+        if i:
+            fetch_openWeatherAPI()
+        time.sleep(60)
 
 threading.Thread(target=fetch_and_store_data_periodically, daemon=True).start()
 
-
+def fetch_openWeatherAPI():
+    lat, lon = 50.639599, 4.616600
+    API_key = '*******'
+    call = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_key}"
+    res = requests.get(call)
+    if res.status_code == 200:
+        vals = res.json()
+        data = {
+            'datetime': datetime.now().strftime('%d/%m/%Y %H:%M:%S'),
+            'temp': round(vals['main']['temp'] - 273.15, 1),
+            'hum': round(vals['main']['humidity'], 1),
+            'HI': -99,
+        }
+        store_data('MSG', data)
+    else:
+        print("Error fetching weather data:\n%s" % res.text)
 @app.route('/')
 def index():
     data_live = get_latest_data()
-    data_24h = {device: get_data_24h(device) for device in arduino_ips.keys()}
-    data_7j = {device: get_data_7j(device) for device in arduino_ips.keys()}
 
     return render_template('index.html',
                            data_live=data_live,
-                           data_24h=data_24h,
-                           data_7j=data_7j,
                            )
 
+@app.route('/2')
+def index2():
+    data_live = get_latest_data()
+
+    return render_template('index2.html',
+                           data_live=data_live,
+                           )
 
 # Route to fetch the latest device data for AJAX requests
 @app.route('/latest_data')

@@ -22,8 +22,8 @@
         <li class="w-full text-center bg-gray-300 dark:bg-gray-800 py-4 rounded-lg sm:w-auto">
             <p class="mt-3 text-grey-800 dark:text-gray-400 text-xs lg:text-md">Hum %</p>
             <h4 class="font-semibold text-sm lg:text-2xl
-                    {% if temp < 16 %}text-red-900  dark:text-red-400
-                    {% elif temp < 18 %}text-yellow-700 dark:text-orange-200
+                    {% if humidity > 80 %}text-red-900  dark:text-red-400
+                    {% elif humidity > 70 %}text-yellow-700 dark:text-orange-200
                     {% else %} text-green-900 dark:text-green-300
                     {% endif %}">
                 {{ humidity }}

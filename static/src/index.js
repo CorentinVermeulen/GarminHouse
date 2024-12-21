@@ -17,7 +17,7 @@ var themeToggleBtn = document.getElementById('theme-toggle');
 // CHART DATA
 
 function fetchChartData(deviceId) {
-    fetch(`/last_12_hours_data?device=${deviceId}`)
+    fetch(`/charts_data?device=${deviceId}`)
         .then(response => response.json())
         .then(data => {
             const times = data.times;

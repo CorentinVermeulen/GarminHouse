@@ -84,7 +84,7 @@ def get_latest_data():
     conn.close()
     return latest_data
 
-def get_data_12h_charts(device=None, time=12):
+def get_charts_data(device=None, time=12):
     # Get the current time and calculate 12 hours ago
     twelve_hours_ago = datetime.now() - timedelta(hours=time)
 
@@ -169,14 +169,6 @@ def fetch_openWeatherAPI():
 def index():
     data_live = get_latest_data()
 
-    return render_template('index.html',
-                           data_live=data_live,
-                           )
-
-@app.route('/2')
-def index2():
-    data_live = get_latest_data()
-
     return render_template('index2.html',
                            data_live=data_live,
                            )
@@ -189,11 +181,12 @@ def latest_data():
 
 
 # Route to fetch the latest device data for AJAX requests
-@app.route('/last_12_hours_data')
-def latest_12h_data():
+@app.route('/charts_data')
+def charts_data():
     device = request.args.get('device')
+    period = request.args.get('period')
     # Call the function to get filtered data for that device
-    data = get_data_12h_charts(device)
+    data = get_charts_data(device, period if period else 24)
     # Return the data as JSON
     return jsonify(data)
 
@@ -205,4 +198,4 @@ def init():
 
 if __name__ == '__main__':
     init_db()
-    app.run(host='0.0.0.0', port=7030, debug=True)
+    app.run(host='0.0.0.0', port=7030)

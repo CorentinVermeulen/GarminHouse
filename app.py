@@ -1,22 +1,14 @@
+from flask import Flask, render_template, jsonify, request
+
+from datetime import datetime, timedelta
 import requests
 import sqlite3
-from datetime import datetime, timedelta
-from flask import Flask, render_template, jsonify, request
 import threading
 import time
 
+from config import ARDUINOS_IPS, DATABASE
+
 app = Flask(__name__)
-
-arduino_ips = {
-    'pierre': '192.168.129.38',
-    'coco': '192.168.129.39',
-    'gui': '192.168.129.40',
-    'sim': '192.168.129.41',
-    'salon': '192.168.129.42',
-    'MSG': False,
-}
-
-DATABASE = 'newDB.db'
 
 def fetch_device_data(device, ip):
     try:
@@ -50,7 +42,7 @@ def get_latest_data():
     latest_data = {}
     with sqlite3.connect(DATABASE) as conn:
         cursor = conn.cursor()
-        for device in arduino_ips.keys():
+        for device in ARDUINOS_IPS.keys():
             cursor.execute("""
                 SELECT datetime, temp, hum FROM sensor_data
                 WHERE device = ? AND datetime = (SELECT MAX(datetime) FROM sensor_data WHERE device = ?)
@@ -85,7 +77,7 @@ def get_charts_data(device=None, time=12):
 
 def fetch_and_store_data_periodically():
     while True:
-        for name, ip in arduino_ips.items():
+        for name, ip in ARDUINOS_IPS.items():
             if ip:
                 data = fetch_device_data(name, ip)
                 if data:

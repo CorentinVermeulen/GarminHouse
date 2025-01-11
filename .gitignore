@@ -1,5 +1,6 @@
 static/dist/*
 *.db
+secret.py
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

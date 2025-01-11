@@ -7,6 +7,7 @@ import threading
 import time
 
 from config import ARDUINOS_IPS, DATABASE
+from secret import API_KEY
 
 app = Flask(__name__)
 
@@ -87,7 +88,7 @@ def fetch_and_store_data_periodically():
 
 def fetch_openWeatherAPI():
     lat, lon = 50.639599, 4.616600
-    API_key = '*******'
+    API_key = API_KEY
     call = f"https://api.openweathermap.org/data/2.5/weather?lat={lat}&lon={lon}&appid={API_key}"
     res = requests.get(call)
     if res.status_code == 200:
